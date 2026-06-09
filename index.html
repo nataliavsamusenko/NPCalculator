@@ -1,0 +1,1366 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор чистой прибыли</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --good: #15803d;
+      --bad: #b91c1c;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: .2s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn.ghost {
+      background: #f9fafb;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fafcff;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .section + .section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      min-height: 42px;
+      display: flex;
+      align-items: flex-end;
+      line-height: 1.25;
+    }
+
+    .field small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: white;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .modes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .mode-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      cursor: pointer;
+      transition: .2s ease;
+      background: #fff;
+    }
+
+    .mode-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .mode-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .mode-card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      display: block;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .metric .value.good { color: var(--good); }
+    .metric .value.bad { color: var(--bad); }
+
+    .metric .sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .results-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .table-head {
+      padding: 14px 16px;
+      font-weight: 800;
+      background: #fafcff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #fcfdff;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .section-row td {
+      background: #f9fafb;
+      font-weight: 800;
+      color: #111827;
+      border-top: 1px solid var(--line);
+    }
+
+    .subtle { color: var(--muted); }
+
+    .error {
+      display: none;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      font-size: 14px;
+    }
+
+    .success {
+      display: none;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      font-size: 14px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 2px 10px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 14px; }
+      .hero h1 { font-size: 24px; }
+      .grid-2, .grid-3, .modes, .summary { grid-template-columns: 1fr; }
+      th:nth-child(3), td:nth-child(3) { display: none; }
+      .metric .value { font-size: 22px; }
+      .field label { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Калькулятор чистой прибыли</h1>
+      <p>Расчет выручки, маржинальной прибыли, валовой прибыли, EBITDA, чистой прибыли, точки безубыточности и целевой прибыли по бизнесу с раздельной логикой для Wildberries и Ozon.</p>
+      <div class="note">Проценты вводите как обычные значения: 22 означает 22%, 5 означает 5%.</div>
+      <div class="toolbar">
+        <button class="btn primary" id="calcBtn">Рассчитать</button>
+        <button class="btn ghost" id="resetBtn">Сбросить все режимы</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="panel-header"><h2>Параметры</h2></div>
+        <div class="panel-body">
+          <div class="modes" id="modeCards">
+            <div class="mode-card active" data-mode="direct">
+              <strong>Прямой расчет</strong>
+              <span>Вводите продажи по WB и Ozon, получаете все показатели.</span>
+            </div>
+            <div class="mode-card" data-mode="breakeven">
+              <strong>ТБУ</strong>
+              <span>Считает минимальный объем, при котором чистая прибыль равна нулю.</span>
+            </div>
+            <div class="mode-card" data-mode="target">
+              <strong>Целевая ЧП</strong>
+              <span>Считает минимальный объем для заданной чистой прибыли.</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Режим расчета</h3>
+
+            <div class="grid-2" id="modeInputsDirect">
+              <div class="field">
+                <label for="units_wb">Продажи WB, ед.</label>
+                <input id="units_wb" type="number" min="0" step="1" value="1000" />
+              </div>
+              <div class="field">
+                <label for="units_ozon">Продажи Ozon, ед.</label>
+                <input id="units_ozon" type="number" min="0" step="1" value="800" />
+              </div>
+            </div>
+
+            <div class="grid-2" id="modeInputsTarget" style="display:none;">
+              <div class="field">
+                <label for="target_profit">Целевая чистая прибыль, ₽</label>
+                <input id="target_profit" type="number" step="1000" value="500000" />
+              </div>
+              <div class="field">
+                <label for="share_wb">Доля WB в выручке, %</label>
+                <input id="share_wb" type="number" min="0" max="100" step="0.01" value="60" />
+                <small>Доля Ozon = 100% − доля WB</small>
+              </div>
+            </div>
+
+            <div class="grid-2" id="modeInputsBreakeven" style="display:none;">
+              <div class="field">
+                <label for="share_wb_be">Доля WB в выручке, %</label>
+                <input id="share_wb_be" type="number" min="0" max="100" step="0.01" value="60" />
+                <small>Доля Ozon = 100% − доля WB</small>
+              </div>
+              <div class="field">
+                <label>Целевая чистая прибыль, ₽</label>
+                <input type="number" value="0" disabled />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>По бизнесу</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label for="vat_rate">Ставка НДС, %</label>
+                <input id="vat_rate" type="number" step="0.01" value="22" />
+              </div>
+              <div class="field">
+                <label for="salary_prod">Зарплата производственного персонала, ₽/мес</label>
+                <input id="salary_prod" type="number" step="1000" value="300000" />
+              </div>
+              <div class="field">
+                <label for="payroll_tax_rate">Налоги ФОТ ПП, % от ФОТ</label>
+                <input id="payroll_tax_rate" type="number" step="0.01" value="30" />
+              </div>
+              <div class="field">
+                <label for="bonus">Премии, ₽/мес</label>
+                <input id="bonus" type="number" step="1000" value="50000" />
+              </div>
+              <div class="field">
+                <label for="packaging_rate">Упаковка, % от выручки</label>
+                <input id="packaging_rate" type="number" step="0.01" value="2" />
+              </div>
+              <div class="field">
+                <label for="transport_rate">Транспортные расходы, % от выручки</label>
+                <input id="transport_rate" type="number" step="0.01" value="1.5" />
+              </div>
+              <div class="field">
+                <label for="external_ads">Внешняя реклама, ₽/мес</label>
+                <input id="external_ads" type="number" step="1000" value="100000" />
+              </div>
+              <div class="field">
+                <label for="fixed_expenses">Постоянные расходы, ₽/мес</label>
+                <input id="fixed_expenses" type="number" step="1000" value="250000" />
+              </div>
+              <div class="field">
+                <label for="depreciation">Амортизация, ₽/мес</label>
+                <input id="depreciation" type="number" step="1000" value="20000" />
+              </div>
+              <div class="field">
+                <label for="profit_tax_manual">Налог на прибыль, ₽/мес</label>
+                <input id="profit_tax_manual" type="number" step="1000" value="60000" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Wildberries</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label for="avg_check_wb">Средний чек WB, ₽ за 1 ед.</label>
+                <input id="avg_check_wb" type="number" step="0.01" value="1200" />
+              </div>
+              <div class="field">
+                <label for="avg_cogs_wb">Средняя себестоимость 1 ед. WB, ₽</label>
+                <input id="avg_cogs_wb" type="number" step="0.01" value="350" />
+              </div>
+              <div class="field">
+                <label for="spp_rate_wb">СПП WB, %</label>
+                <input id="spp_rate_wb" type="number" step="0.01" value="10" />
+              </div>
+              <div class="field">
+                <label for="commission_wb_rate">Комиссия WB, %</label>
+                <input id="commission_wb_rate" type="number" step="0.01" value="18" />
+              </div>
+              <div class="field">
+                <label for="logistics_wb_rate">Логистика WB, %</label>
+                <input id="logistics_wb_rate" type="number" step="0.01" value="8" />
+              </div>
+              <div class="field">
+                <label for="ads_wb_rate">Реклама WB, %</label>
+                <input id="ads_wb_rate" type="number" step="0.01" value="6" />
+              </div>
+              <div class="field">
+                <label for="storage_wb_rate">Хранение WB, %</label>
+                <input id="storage_wb_rate" type="number" step="0.01" value="2" />
+              </div>
+              <div class="field">
+                <label for="other_wb_rate">Прочие расходы WB, %</label>
+                <input id="other_wb_rate" type="number" step="0.01" value="1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3>Ozon</h3>
+            <div class="grid-2">
+              <div class="field">
+                <label for="avg_check_ozon">Средний чек Ozon, ₽ за 1 ед.</label>
+                <input id="avg_check_ozon" type="number" step="0.01" value="1150" />
+              </div>
+              <div class="field">
+                <label for="avg_cogs_ozon">Средняя себестоимость 1 ед. Ozon, ₽</label>
+                <input id="avg_cogs_ozon" type="number" step="0.01" value="350" />
+              </div>
+              <div class="field">
+                <label for="points_rate_ozon">Баллы Ozon, %</label>
+                <input id="points_rate_ozon" type="number" step="0.01" value="8" />
+              </div>
+              <div class="field">
+                <label for="commission_ozon_rate">Комиссия Ozon, %</label>
+                <input id="commission_ozon_rate" type="number" step="0.01" value="17" />
+              </div>
+              <div class="field">
+                <label for="logistics_ozon_rate">Логистика Ozon, %</label>
+                <input id="logistics_ozon_rate" type="number" step="0.01" value="7" />
+              </div>
+              <div class="field">
+                <label for="ads_ozon_rate">Реклама Ozon, %</label>
+                <input id="ads_ozon_rate" type="number" step="0.01" value="5" />
+              </div>
+              <div class="field">
+                <label for="storage_ozon_rate">Хранение Ozon, %</label>
+                <input id="storage_ozon_rate" type="number" step="0.01" value="1.5" />
+              </div>
+              <div class="field">
+                <label for="other_ozon_rate">Прочие расходы Ozon, %</label>
+                <input id="other_ozon_rate" type="number" step="0.01" value="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div id="errorBox" class="error"></div>
+        <div id="successBox" class="success"></div>
+
+        <div class="summary">
+          <div class="metric">
+            <div class="label">Продажи всего, ед.</div>
+            <div class="value" id="summaryUnits">0</div>
+            <div class="sub" id="summaryUnitsSub">WB: 0 • Ozon: 0</div>
+          </div>
+          <div class="metric">
+            <div class="label">Выручка с учетом скидок, ₽</div>
+            <div class="value" id="summaryRevenue">0 ₽</div>
+            <div class="sub">Выручка с СПП WB + выручка с баллами Ozon</div>
+          </div>
+          <div class="metric">
+            <div class="label">Валовая прибыль, ₽</div>
+            <div class="value" id="summaryGross">0 ₽</div>
+            <div class="sub" id="summaryGrossMargin">Рентабельность: 0%</div>
+          </div>
+          <div class="metric">
+            <div class="label">Чистая прибыль, ₽</div>
+            <div class="value" id="summaryNet">0 ₽</div>
+            <div class="sub" id="summaryNetMargin">Рентабельность: 0%</div>
+          </div>
+        </div>
+
+        <div class="results-stack">
+          <div class="table-card">
+            <div class="table-head">Ключевые результаты</div>
+            <table>
+              <tbody id="keyResultsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-card">
+            <div class="table-head">Детализация расчета</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Показатель</th>
+                  <th>Значение</th>
+                  <th>Комментарий</th>
+                </tr>
+              </thead>
+              <tbody id="detailsBody"></tbody>
+            </table>
+          </div>
+          <div class="footer-note">Каждый режим хранит свой собственный набор исходных данных и свой последний результат. При переключении режимов ничего не перезаписывается между сценариями.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      mode: 'profit_calc_current_mode_v2',
+      states: 'profit_calc_mode_states_v2',
+      cache: 'profit_calc_mode_cache_v2'
+    };
+
+    const ALL_INPUT_IDS = [
+      'units_wb',
+      'units_ozon',
+      'target_profit',
+      'share_wb',
+      'share_wb_be',
+      'vat_rate',
+      'salary_prod',
+      'payroll_tax_rate',
+      'bonus',
+      'packaging_rate',
+      'transport_rate',
+      'external_ads',
+      'fixed_expenses',
+      'depreciation',
+      'profit_tax_manual',
+      'avg_check_wb',
+      'avg_cogs_wb',
+      'spp_rate_wb',
+      'commission_wb_rate',
+      'logistics_wb_rate',
+      'ads_wb_rate',
+      'storage_wb_rate',
+      'other_wb_rate',
+      'avg_check_ozon',
+      'avg_cogs_ozon',
+      'points_rate_ozon',
+      'commission_ozon_rate',
+      'logistics_ozon_rate',
+      'ads_ozon_rate',
+      'storage_ozon_rate',
+      'other_ozon_rate'
+    ];
+
+    const DEFAULT_INPUTS = {
+      units_wb: 1000,
+      units_ozon: 800,
+      target_profit: 500000,
+      share_wb: 60,
+      share_wb_be: 60,
+      vat_rate: 22,
+      salary_prod: 300000,
+      payroll_tax_rate: 30,
+      bonus: 50000,
+      packaging_rate: 2,
+      transport_rate: 1.5,
+      external_ads: 100000,
+      fixed_expenses: 250000,
+      depreciation: 20000,
+      profit_tax_manual: 60000,
+      avg_check_wb: 1200,
+      avg_cogs_wb: 350,
+      spp_rate_wb: 10,
+      commission_wb_rate: 18,
+      logistics_wb_rate: 8,
+      ads_wb_rate: 6,
+      storage_wb_rate: 2,
+      other_wb_rate: 1,
+      avg_check_ozon: 1150,
+      avg_cogs_ozon: 350,
+      points_rate_ozon: 8,
+      commission_ozon_rate: 17,
+      logistics_ozon_rate: 7,
+      ads_ozon_rate: 5,
+      storage_ozon_rate: 1.5,
+      other_ozon_rate: 1
+    };
+
+    const modeCards = document.querySelectorAll('.mode-card');
+    const modeInputsDirect = document.getElementById('modeInputsDirect');
+    const modeInputsTarget = document.getElementById('modeInputsTarget');
+    const modeInputsBreakeven = document.getElementById('modeInputsBreakeven');
+
+    let currentMode = 'direct';
+
+    let modeStates = {
+      direct: structuredClone(DEFAULT_INPUTS),
+      breakeven: structuredClone(DEFAULT_INPUTS),
+      target: structuredClone(DEFAULT_INPUTS)
+    };
+
+    let modeCache = {
+      direct: null,
+      breakeven: null,
+      target: null
+    };
+
+    const currencyFmt = new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      maximumFractionDigits: 0
+    });
+
+    const numberFmt = new Intl.NumberFormat('ru-RU', {
+      maximumFractionDigits: 0
+    });
+
+    const percentFmt = new Intl.NumberFormat('ru-RU', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    function money(v) {
+      return currencyFmt.format(isFinite(v) ? v : 0);
+    }
+
+    function qty(v) {
+      return numberFmt.format(Math.round(isFinite(v) ? v : 0));
+    }
+
+    function pct(v) {
+      return `${percentFmt.format(isFinite(v) ? v * 100 : 0)}%`;
+    }
+
+    function num(id) {
+      const el = document.getElementById(id);
+      return Number(el?.value || 0);
+    }
+
+    function ratio(percentValue) {
+      return Number(percentValue || 0) / 100;
+    }
+
+    function safeDiv(a, b) {
+      return b === 0 ? 0 : a / b;
+    }
+
+    function structuredClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function saveModeStatesToStorage() {
+      localStorage.setItem(STORAGE_KEYS.states, JSON.stringify(modeStates));
+    }
+
+    function loadModeStatesFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEYS.states);
+      if (!raw) return;
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          modeStates = {
+            direct: { ...structuredClone(DEFAULT_INPUTS), ...(parsed.direct || {}) },
+            breakeven: { ...structuredClone(DEFAULT_INPUTS), ...(parsed.breakeven || {}) },
+            target: { ...structuredClone(DEFAULT_INPUTS), ...(parsed.target || {}) }
+          };
+        }
+      } catch (e) {
+        console.warn('Не удалось восстановить сохраненные состояния режимов.', e);
+      }
+    }
+
+    function saveModeToStorage() {
+      localStorage.setItem(STORAGE_KEYS.mode, currentMode);
+    }
+
+    function loadModeFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEYS.mode);
+      if (raw && ['direct', 'breakeven', 'target'].includes(raw)) {
+        currentMode = raw;
+      }
+    }
+
+    function saveCacheToStorage() {
+      localStorage.setItem(STORAGE_KEYS.cache, JSON.stringify(modeCache));
+    }
+
+    function loadCacheFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEYS.cache);
+      if (!raw) return;
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          modeCache = {
+            direct: parsed.direct || null,
+            breakeven: parsed.breakeven || null,
+            target: parsed.target || null
+          };
+        }
+      } catch (e) {
+        console.warn('Не удалось восстановить сохраненные результаты режимов.', e);
+      }
+    }
+
+    function clearAllStorage() {
+      localStorage.removeItem(STORAGE_KEYS.mode);
+      localStorage.removeItem(STORAGE_KEYS.states);
+      localStorage.removeItem(STORAGE_KEYS.cache);
+    }
+
+    function readAllInputsFromDom() {
+      const values = {};
+      ALL_INPUT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) values[id] = el.value;
+      });
+      return values;
+    }
+
+    function writeAllInputsToDom(values) {
+      ALL_INPUT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && values[id] !== undefined) {
+          el.value = values[id];
+        }
+      });
+    }
+
+    function saveCurrentModeInputs() {
+      modeStates[currentMode] = {
+        ...structuredClone(DEFAULT_INPUTS),
+        ...readAllInputsFromDom()
+      };
+      saveModeStatesToStorage();
+    }
+
+    function loadModeInputs(mode) {
+      const state = modeStates[mode] || structuredClone(DEFAULT_INPUTS);
+      writeAllInputsToDom(state);
+    }
+
+    function getParams(mode = currentMode) {
+      const shareField = mode === 'breakeven' ? num('share_wb_be') : num('share_wb');
+
+      return {
+        vatRate: ratio(num('vat_rate')),
+        salaryProd: num('salary_prod'),
+        payrollTaxRate: ratio(num('payroll_tax_rate')),
+        bonus: num('bonus'),
+        packagingRate: ratio(num('packaging_rate')),
+        transportRate: ratio(num('transport_rate')),
+        externalAds: num('external_ads'),
+        fixedExpenses: num('fixed_expenses'),
+        depreciation: num('depreciation'),
+        profitTaxManual: num('profit_tax_manual'),
+
+        avgCheckWb: num('avg_check_wb'),
+        avgCogsWb: num('avg_cogs_wb'),
+        sppRateWb: ratio(num('spp_rate_wb')),
+        commissionWbRate: ratio(num('commission_wb_rate')),
+        logisticsWbRate: ratio(num('logistics_wb_rate')),
+        adsWbRate: ratio(num('ads_wb_rate')),
+        storageWbRate: ratio(num('storage_wb_rate')),
+        otherWbRate: ratio(num('other_wb_rate')),
+
+        avgCheckOzon: num('avg_check_ozon'),
+        avgCogsOzon: num('avg_cogs_ozon'),
+        pointsRateOzon: ratio(num('points_rate_ozon')),
+        commissionOzonRate: ratio(num('commission_ozon_rate')),
+        logisticsOzonRate: ratio(num('logistics_ozon_rate')),
+        adsOzonRate: ratio(num('ads_ozon_rate')),
+        storageOzonRate: ratio(num('storage_ozon_rate')),
+        otherOzonRate: ratio(num('other_ozon_rate')),
+
+        shareWb: ratio(shareField)
+      };
+    }
+
+    function validateParams(p, mode = currentMode) {
+      if (p.vatRate < 0) return 'Ставка НДС не может быть отрицательной.';
+      if (p.avgCheckWb <= 0) return 'Средний чек WB должен быть больше 0.';
+      if (p.avgCheckOzon <= 0) return 'Средний чек Ozon должен быть больше 0.';
+      if (p.avgCogsWb < 0) return 'Себестоимость WB не может быть отрицательной.';
+      if (p.avgCogsOzon < 0) return 'Себестоимость Ozon не может быть отрицательной.';
+      if ((mode === 'target' || mode === 'breakeven') && (p.shareWb < 0 || p.shareWb > 1)) {
+        return 'Доля WB должна быть в диапазоне от 0 до 100.';
+      }
+      return '';
+    }
+
+    function calcDirect(unitsWb, unitsOzon, p) {
+      const vatDivider = 1 + p.vatRate;
+      const salesWb = Math.max(0, Math.ceil(unitsWb));
+      const salesOzon = Math.max(0, Math.ceil(unitsOzon));
+
+      const revenueWithSppWb = salesWb * p.avgCheckWb;
+      const sppWb = revenueWithSppWb * p.sppRateWb;
+      const taxBaseWb = revenueWithSppWb - sppWb;
+      const outputVatWb = p.vatRate === 0 ? 0 : (taxBaseWb / vatDivider) * p.vatRate;
+      const taxBaseWbExVat = taxBaseWb - outputVatWb;
+      const revenueWithSppWbExVat = revenueWithSppWb - outputVatWb;
+
+      const revenueWithPointsOzon = salesOzon * p.avgCheckOzon;
+      const pointsOzon = revenueWithPointsOzon * p.pointsRateOzon;
+      const taxBaseOzon = revenueWithPointsOzon - pointsOzon;
+      const outputVatOzon = p.vatRate === 0 ? 0 : (taxBaseOzon / vatDivider) * p.vatRate;
+      const taxBaseOzonExVat = taxBaseOzon - outputVatOzon;
+      const revenueWithPointsOzonExVat = revenueWithPointsOzon - outputVatOzon;
+
+      const cogsWb = p.avgCogsWb * salesWb;
+      const logisticsWb = revenueWithSppWb * p.logisticsWbRate;
+      const storageWb = revenueWithSppWb * p.storageWbRate;
+      const otherWb = revenueWithSppWb * p.otherWbRate;
+      const grossCommissionWb = revenueWithSppWb * p.commissionWbRate;
+      const grossAdsWb = revenueWithSppWb * p.adsWbRate;
+      const inputVatWb = p.vatRate === 0 ? 0 : (((grossCommissionWb + logisticsWb + storageWb) - sppWb) / vatDivider) * p.vatRate;
+      const commissionWb = grossCommissionWb - inputVatWb;
+      const vatAdsWb = p.vatRate === 0 ? 0 : (grossAdsWb / vatDivider) * p.vatRate;
+      const adsWb = grossAdsWb - vatAdsWb;
+      const variableCostsWb = cogsWb + commissionWb + logisticsWb + adsWb + storageWb + otherWb;
+
+      const cogsOzon = p.avgCogsOzon * salesOzon;
+      const commissionOzon = revenueWithPointsOzon * p.commissionOzonRate;
+      const logisticsOzon = revenueWithPointsOzon * p.logisticsOzonRate;
+      const adsOzon = revenueWithPointsOzon * p.adsOzonRate;
+      const storageOzon = revenueWithPointsOzon * p.storageOzonRate;
+      const otherOzon = revenueWithPointsOzon * p.otherOzonRate;
+      const variableCostsOzon = cogsOzon + commissionOzon + logisticsOzon + adsOzon + storageOzon + otherOzon;
+
+      const marginProfitWb = revenueWithSppWbExVat - variableCostsWb;
+      const marginProfitOzon = revenueWithPointsOzonExVat - variableCostsOzon;
+      const totalMarginProfit = marginProfitWb + marginProfitOzon;
+
+      const totalRevenueGross = revenueWithSppWb + revenueWithPointsOzon;
+      const totalRevenueExVat = revenueWithSppWbExVat + revenueWithPointsOzonExVat;
+
+      const payrollTaxes = p.salaryProd * p.payrollTaxRate;
+      const packaging = totalRevenueGross * p.packagingRate;
+      const transport = totalRevenueGross * p.transportRate;
+      const productionOverheads = p.salaryProd + payrollTaxes + p.bonus + packaging + transport + p.externalAds;
+
+      const grossProfit = totalMarginProfit - productionOverheads;
+      const ebitda = grossProfit - p.fixedExpenses;
+      const netProfit = ebitda - p.depreciation - p.profitTaxManual;
+
+      return {
+        mode: 'direct',
+        salesWb,
+        salesOzon,
+        totalUnits: salesWb + salesOzon,
+        shareWbActual: safeDiv(revenueWithSppWb, totalRevenueGross),
+        shareOzonActual: safeDiv(revenueWithPointsOzon, totalRevenueGross),
+
+        revenueWithSppWb,
+        sppWb,
+        taxBaseWb,
+        outputVatWb,
+        taxBaseWbExVat,
+        revenueWithSppWbExVat,
+
+        revenueWithPointsOzon,
+        pointsOzon,
+        taxBaseOzon,
+        outputVatOzon,
+        taxBaseOzonExVat,
+        revenueWithPointsOzonExVat,
+
+        cogsWb,
+        logisticsWb,
+        storageWb,
+        otherWb,
+        grossCommissionWb,
+        inputVatWb,
+        commissionWb,
+        grossAdsWb,
+        vatAdsWb,
+        adsWb,
+        variableCostsWb,
+
+        cogsOzon,
+        commissionOzon,
+        logisticsOzon,
+        adsOzon,
+        storageOzon,
+        otherOzon,
+        variableCostsOzon,
+
+        marginProfitWb,
+        marginProfitOzon,
+        totalMarginProfit,
+        marginRateWb: safeDiv(marginProfitWb, revenueWithSppWbExVat),
+        marginRateOzon: safeDiv(marginProfitOzon, revenueWithPointsOzonExVat),
+        totalMarginRate: safeDiv(totalMarginProfit, totalRevenueExVat),
+
+        payrollTaxes,
+        packaging,
+        transport,
+        productionOverheads,
+        grossProfit,
+        grossMarginRate: safeDiv(grossProfit, totalRevenueExVat),
+
+        fixedExpenses: p.fixedExpenses,
+        ebitda,
+        ebitdaMargin: safeDiv(ebitda, totalRevenueExVat),
+
+        depreciation: p.depreciation,
+        profitTaxManual: p.profitTaxManual,
+        netProfit,
+        netMargin: safeDiv(netProfit, totalRevenueExVat),
+
+        totalRevenueGross,
+        totalRevenueExVat,
+
+        salaryProd: p.salaryProd,
+        bonus: p.bonus,
+        externalAds: p.externalAds
+      };
+    }
+
+    function calcByRevenueShare(totalRevenueGrossPlanned, p) {
+      const shareWb = p.shareWb;
+      const shareOzon = 1 - shareWb;
+
+      const plannedWb = totalRevenueGrossPlanned * shareWb;
+      const plannedOzon = totalRevenueGrossPlanned * shareOzon;
+
+      const salesWb = p.avgCheckWb > 0 ? Math.ceil(plannedWb / p.avgCheckWb) : 0;
+      const salesOzon = p.avgCheckOzon > 0 ? Math.ceil(plannedOzon / p.avgCheckOzon) : 0;
+
+      const result = calcDirect(salesWb, salesOzon, p);
+      result.mode = 'share';
+      result.targetShareWb = shareWb;
+      result.targetShareOzon = shareOzon;
+      result.plannedRevenueGross = totalRevenueGrossPlanned;
+
+      return result;
+    }
+
+    function solveTarget(targetNet, p) {
+      const base = calcByRevenueShare(0, p);
+      if (base.netProfit >= targetNet) {
+        base.mode = 'target';
+        return { ok: true, result: base };
+      }
+
+      let low = 0;
+      let high = Math.max(1000, Math.abs(targetNet) || 1000);
+      let guard = 0;
+      let probe = calcByRevenueShare(high, p);
+
+      while (probe.netProfit < targetNet && high < 1e15 && guard < 80) {
+        low = high;
+        high *= 2;
+        probe = calcByRevenueShare(high, p);
+        guard += 1;
+      }
+
+      if (probe.netProfit < targetNet) {
+        return {
+          ok: false,
+          error: 'Не удается достичь заданной чистой прибыли при текущих параметрах. Проверьте маржинальность, средний чек, ставки расходов и долю маркетплейсов.'
+        };
+      }
+
+      for (let i = 0; i < 80; i += 1) {
+        const mid = (low + high) / 2;
+        const midCalc = calcByRevenueShare(mid, p);
+        if (midCalc.netProfit >= targetNet) {
+          high = mid;
+        } else {
+          low = mid;
+        }
+      }
+
+      const finalResult = calcByRevenueShare(high, p);
+      finalResult.mode = 'target';
+      finalResult.targetNet = targetNet;
+      return { ok: true, result: finalResult };
+    }
+
+    function modeSuccessText(mode, result) {
+      if (mode === 'direct') {
+        return 'Показаны результаты для введенного объема продаж.';
+      }
+      if (mode === 'breakeven') {
+        return `Найден минимальный объем продаж для ТБУ: чистая прибыль ${money(result.netProfit)}.`;
+      }
+      return `Найден минимальный объем продаж для целевой чистой прибыли: ${money(result.netProfit)}.`;
+    }
+
+    function clearResults() {
+      document.getElementById('summaryUnits').textContent = '0';
+      document.getElementById('summaryUnitsSub').textContent = 'WB: 0 • Ozon: 0';
+      document.getElementById('summaryRevenue').textContent = '0 ₽';
+
+      const grossEl = document.getElementById('summaryGross');
+      grossEl.textContent = '0 ₽';
+      grossEl.className = 'value';
+      document.getElementById('summaryGrossMargin').textContent = 'Рентабельность: 0%';
+
+      const netEl = document.getElementById('summaryNet');
+      netEl.textContent = '0 ₽';
+      netEl.className = 'value';
+      document.getElementById('summaryNetMargin').textContent = 'Рентабельность: 0%';
+
+      document.getElementById('keyResultsBody').innerHTML = '';
+      document.getElementById('detailsBody').innerHTML = '';
+    }
+
+    function render(result) {
+      const netEl = document.getElementById('summaryNet');
+      const grossEl = document.getElementById('summaryGross');
+
+      document.getElementById('summaryUnits').textContent = qty(result.totalUnits);
+      document.getElementById('summaryUnitsSub').textContent = `WB: ${qty(result.salesWb)} • Ozon: ${qty(result.salesOzon)}`;
+      document.getElementById('summaryRevenue').textContent = money(result.totalRevenueGross);
+
+      grossEl.textContent = money(result.grossProfit);
+      grossEl.className = `value ${result.grossProfit >= 0 ? 'good' : 'bad'}`;
+      document.getElementById('summaryGrossMargin').textContent = `Рентабельность: ${pct(result.grossMarginRate)}`;
+
+      netEl.textContent = money(result.netProfit);
+      netEl.className = `value ${result.netProfit >= 0 ? 'good' : 'bad'}`;
+      document.getElementById('summaryNetMargin').textContent = `Рентабельность: ${pct(result.netMargin)}`;
+
+      const keyRows = [
+        ['Продажи WB, ед.', qty(result.salesWb), result.targetShareWb != null ? `Целевая доля выручки WB: ${pct(result.targetShareWb)}` : `Фактическая доля выручки WB: ${pct(result.shareWbActual)}`],
+        ['Продажи Ozon, ед.', qty(result.salesOzon), result.targetShareOzon != null ? `Целевая доля выручки Ozon: ${pct(result.targetShareOzon)}` : `Фактическая доля выручки Ozon: ${pct(result.shareOzonActual)}`],
+        ['Выручка с учетом скидок, ₽', money(result.totalRevenueGross), 'Выручка с СПП WB + выручка с баллами Ozon'],
+        ['Маржинальная прибыль итого, ₽', money(result.totalMarginProfit), `Рентабельность: ${pct(result.totalMarginRate)}`],
+        ['Валовая прибыль, ₽', money(result.grossProfit), `Рентабельность: ${pct(result.grossMarginRate)}`],
+        ['EBITDA, ₽', money(result.ebitda), `Рентабельность: ${pct(result.ebitdaMargin)}`],
+        ['Чистая прибыль, ₽', money(result.netProfit), `Рентабельность: ${pct(result.netMargin)}`]
+      ];
+
+      if (result.targetNet != null) {
+        keyRows.unshift(['Целевая чистая прибыль, ₽', money(result.targetNet), 'Результат подобран с округлением продаж вверх']);
+      }
+
+      document.getElementById('keyResultsBody').innerHTML = keyRows
+        .map(([a, b, c]) => `<tr><td>${a}</td><td><strong>${b}</strong></td><td class="subtle">${c}</td></tr>`)
+        .join('');
+
+      const rows = [];
+      const section = (title) => rows.push(`<tr class="section-row"><td colspan="3">${title}</td></tr>`);
+      const row = (name, value, note = '') => rows.push(`<tr><td>${name}</td><td><strong>${value}</strong></td><td class="subtle">${note}</td></tr>`);
+
+      section('II. Выручка');
+      row('Выручка с СПП (WB), ₽', money(result.revenueWithSppWb), 'Продажи WB × средний чек WB');
+      row('СПП (WB), ₽', money(result.sppWb), 'Выручка с СПП × СПП WB, %');
+      row('Налоговая база WB, ₽', money(result.taxBaseWb), 'Выручка с СПП − СПП');
+      row('НДС с налоговой базы (WB), ₽', money(result.outputVatWb), 'Налоговая база WB / (1 + ставка НДС) × ставка НДС');
+      row('Налоговая база WB без НДС, ₽', money(result.taxBaseWbExVat), 'Налоговая база WB − НДС');
+      row('Выручка с СПП без НДС (WB), ₽', money(result.revenueWithSppWbExVat), 'Выручка с СПП − НДС с налоговой базы');
+
+      row('Выручка с баллами (Ozon), ₽', money(result.revenueWithPointsOzon), 'Продажи Ozon × средний чек Ozon');
+      row('Баллы (Ozon), ₽', money(result.pointsOzon), 'Выручка с баллами × Баллы Ozon, %');
+      row('Налоговая база Ozon, ₽', money(result.taxBaseOzon), 'Выручка с баллами − Баллы');
+      row('НДС с налоговой базы (Ozon), ₽', money(result.outputVatOzon), 'Налоговая база Ozon / (1 + ставка НДС) × ставка НДС');
+      row('Налоговая база Ozon без НДС, ₽', money(result.taxBaseOzonExVat), 'Налоговая база Ozon − НДС');
+      row('Выручка с баллами без НДС (Ozon), ₽', money(result.revenueWithPointsOzonExVat), 'Выручка с баллами − НДС с налоговой базы');
+
+      section('III. Переменные расходы');
+      row('Себестоимость б/НДС (WB), ₽', money(result.cogsWb), 'Средняя себестоимость WB × продажи WB');
+      row('Комиссия (WB), ₽', money(result.commissionWb), 'Грязная комиссия WB − НДС вх');
+      row('Логистика (WB), ₽', money(result.logisticsWb), 'Выручка с СПП × логистика WB, %');
+      row('Реклама б/НДС (WB), ₽', money(result.adsWb), 'Грязная реклама WB − НДС по рекламе');
+      row('Хранение (WB), ₽', money(result.storageWb), 'Выручка с СПП × хранение WB, %');
+      row('Прочие расходы (WB), ₽', money(result.otherWb), 'Выручка с СПП × прочие расходы WB, %');
+      row('НДС вх (WB), ₽', money(result.inputVatWb), '((Грязная комиссия WB + логистика WB + хранение WB) − СПП WB) / (1 + ставка НДС) × ставка НДС');
+      row('Переменные затраты WB, ₽', money(result.variableCostsWb), 'Сумма переменных затрат WB');
+
+      row('Себестоимость б/НДС (Ozon), ₽', money(result.cogsOzon), 'Средняя себестоимость Ozon × продажи Ozon');
+      row('Комиссия (Ozon), ₽', money(result.commissionOzon), 'Выручка с баллами × комиссия Ozon, %');
+      row('Логистика б/НДС (Ozon), ₽', money(result.logisticsOzon), 'Выручка с баллами × логистика Ozon, %');
+      row('Реклама б/НДС (Ozon), ₽', money(result.adsOzon), 'Выручка с баллами × реклама Ozon, %');
+      row('Хранение (Ozon), ₽', money(result.storageOzon), 'Выручка с баллами × хранение Ozon, %');
+      row('Прочие расходы (Ozon), ₽', money(result.otherOzon), 'Выручка с баллами × прочие расходы Ozon, %');
+      row('Переменные затраты Ozon, ₽', money(result.variableCostsOzon), 'Сумма переменных затрат Ozon');
+
+      section('IV. Маржинальная прибыль и рентабельность');
+      row('Маржинальная прибыль (WB), ₽', money(result.marginProfitWb), 'Выручка с СПП без НДС (WB) − Переменные затраты WB');
+      row('Маржинальная прибыль (Ozon), ₽', money(result.marginProfitOzon), 'Выручка с баллами без НДС (Ozon) − Переменные затраты Ozon');
+      row('Рентабельность по маржинальной прибыли (WB), %', pct(result.marginRateWb), 'Маржинальная прибыль WB / Выручка с СПП без НДС (WB)');
+      row('Рентабельность по маржинальной прибыли (Ozon), %', pct(result.marginRateOzon), 'Маржинальная прибыль Ozon / Выручка с баллами без НДС (Ozon)');
+      row('Рентабельность по маржинальной прибыли (итого), %', pct(result.totalMarginRate), 'Маржинальная прибыль итого / Общая выручка без НДС');
+
+      section('V. Общепроизводственные расходы');
+      row('Зарплата производственного персонала, ₽', money(result.salaryProd || 0), 'Ручной параметр');
+      row('Налоги ФОТ ПП, ₽', money(result.payrollTaxes), 'Зарплата производственного персонала × ставка налогов ФОТ');
+      row('Премии, ₽', money(result.bonus || 0), 'Ручной параметр');
+      row('Упаковка, ₽', money(result.packaging), 'Общая выручка с СПП/баллами × доля упаковки');
+      row('Транспортные расходы, ₽', money(result.transport), 'Общая выручка с СПП/баллами × доля транспорта');
+      row('Внешняя реклама, ₽', money(result.externalAds || 0), 'Ручной параметр');
+
+      section('VI. Валовая прибыль и рентабельность');
+      row('Валовая прибыль, ₽', money(result.grossProfit), '(Маржинальная прибыль WB + Маржинальная прибыль Ozon) − Общепроизводственные расходы');
+      row('Рентабельность по валовой прибыли, %', pct(result.grossMarginRate), 'Валовая прибыль / Общая выручка без НДС');
+
+      section('VII. Постоянные расходы');
+      row('Постоянные расходы, ₽', money(result.fixedExpenses), 'Ручной параметр');
+
+      section('VIII. EBITDA и рентабельность');
+      row('EBITDA, ₽', money(result.ebitda), 'Валовая прибыль − Постоянные расходы');
+      row('Рентабельность по EBITDA, %', pct(result.ebitdaMargin), 'EBITDA / Общая выручка без НДС');
+
+      section('IX. Амортизация');
+      row('Амортизация, ₽', money(result.depreciation), 'Ручной параметр');
+
+      section('X. Налог на прибыль');
+      row('Налог на прибыль, ₽', money(result.profitTaxManual), 'Ручной параметр');
+
+      section('XI. Чистая прибыль и рентабельность');
+      row('Чистая прибыль, ₽', money(result.netProfit), 'EBITDA − Амортизация − Налог на прибыль');
+      row('Рентабельность по чистой прибыли, %', pct(result.netMargin), 'Чистая прибыль / Общая выручка без НДС');
+
+      document.getElementById('detailsBody').innerHTML = rows.join('');
+    }
+
+    function showMessage(type, text) {
+      const errorBox = document.getElementById('errorBox');
+      const successBox = document.getElementById('successBox');
+
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+      errorBox.textContent = '';
+      successBox.textContent = '';
+
+      if (type === 'error') {
+        errorBox.style.display = 'block';
+        errorBox.textContent = text;
+      } else if (type === 'success') {
+        successBox.style.display = 'block';
+        successBox.textContent = text;
+      }
+    }
+
+    function saveModeResult(mode, result) {
+      modeCache[mode] = {
+        result: structuredClone(result),
+        successText: modeSuccessText(mode, result)
+      };
+      saveCacheToStorage();
+    }
+
+    function restoreModeResult(mode) {
+      const cached = modeCache[mode];
+      if (!cached) {
+        clearResults();
+        showMessage('success', `Режим «${mode === 'direct' ? 'Прямой расчет' : mode === 'breakeven' ? 'ТБУ' : 'Целевая ЧП'}» открыт. Для него пока нет сохраненного расчета.`);
+        return false;
+      }
+
+      render(cached.result);
+      showMessage('success', cached.successText + ' Для этого режима восстановлены его собственные исходные данные и результат.');
+      return true;
+    }
+
+    function calculate() {
+      saveCurrentModeInputs();
+
+      const p = getParams(currentMode);
+      const validationError = validateParams(p, currentMode);
+
+      if (validationError) {
+        showMessage('error', validationError);
+        return;
+      }
+
+      let result;
+
+      if (currentMode === 'direct') {
+        result = calcDirect(num('units_wb'), num('units_ozon'), p);
+      } else if (currentMode === 'breakeven') {
+        const solved = solveTarget(0, p);
+        if (!solved.ok) {
+          showMessage('error', solved.error);
+          return;
+        }
+        result = solved.result;
+      } else {
+        const solved = solveTarget(num('target_profit'), p);
+        if (!solved.ok) {
+          showMessage('error', solved.error);
+          return;
+        }
+        result = solved.result;
+      }
+
+      render(result);
+      saveModeResult(currentMode, result);
+      showMessage('success', modeSuccessText(currentMode, result));
+    }
+
+    function updateModeVisibility(mode) {
+      modeCards.forEach(card => {
+        card.classList.toggle('active', card.dataset.mode === mode);
+      });
+
+      modeInputsDirect.style.display = mode === 'direct' ? 'grid' : 'none';
+      modeInputsTarget.style.display = mode === 'target' ? 'grid' : 'none';
+      modeInputsBreakeven.style.display = mode === 'breakeven' ? 'grid' : 'none';
+    }
+
+    function setMode(mode, options = {}) {
+      const { skipSaveCurrent = false } = options;
+
+      if (!skipSaveCurrent) {
+        saveCurrentModeInputs();
+      }
+
+      currentMode = mode;
+      saveModeToStorage();
+      updateModeVisibility(mode);
+      loadModeInputs(mode);
+      restoreModeResult(mode);
+    }
+
+    function resetAllModes() {
+      modeStates = {
+        direct: structuredClone(DEFAULT_INPUTS),
+        breakeven: structuredClone(DEFAULT_INPUTS),
+        target: structuredClone(DEFAULT_INPUTS)
+      };
+
+      modeCache = {
+        direct: null,
+        breakeven: null,
+        target: null
+      };
+
+      currentMode = 'direct';
+
+      clearAllStorage();
+      saveModeStatesToStorage();
+      saveCacheToStorage();
+      saveModeToStorage();
+
+      updateModeVisibility(currentMode);
+      loadModeInputs(currentMode);
+      clearResults();
+      showMessage('success', 'Все режимы сброшены к значениям по умолчанию.');
+      calculate();
+    }
+
+    modeCards.forEach(card => {
+      card.addEventListener('click', () => setMode(card.dataset.mode));
+    });
+
+    ALL_INPUT_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.addEventListener('input', () => {
+        saveCurrentModeInputs();
+      });
+    });
+
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    document.getElementById('resetBtn').addEventListener('click', resetAllModes);
+
+    function init() {
+      loadModeStatesFromStorage();
+      loadCacheFromStorage();
+      loadModeFromStorage();
+
+      updateModeVisibility(currentMode);
+      loadModeInputs(currentMode);
+
+      const restored = restoreModeResult(currentMode);
+      if (!restored) {
+        calculate();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
